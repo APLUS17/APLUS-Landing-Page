@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import artworks from "@/data/artworks.json";
 import { FilterBar } from "./FilterBar";
 import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
+import { ParticlesBackground } from "./ParticlesBackground";
 
 // Types
 type Artwork = {
@@ -55,49 +56,6 @@ const rowVariants = {
   }),
 };
 
-// Background Animation Component
-const HalftoneBackground = () => {
-  return (
-    <div className="fixed inset-0 overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
-      {/* Animated halftone dots */}
-      <div className="absolute inset-0 opacity-20">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: Math.random() * 4 + 1,
-              height: Math.random() * 4 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0.1, 0.3, 0.1],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Subtle grid overlay */}
-      <div 
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }}
-      />
-    </div>
-  );
-};
 
 // Fixed Navbar Component
 const Navbar = () => {
@@ -244,7 +202,7 @@ export const DraggableContainer = ({
   return (
     <GridVariantContext.Provider value={variant}>
       <div className="h-dvh overflow-hidden">
-        <HalftoneBackground />
+        <ParticlesBackground />
         <Navbar />
         <motion.div className="h-dvh overflow-hidden">
           <motion.div
@@ -375,23 +333,127 @@ const InfiniteGallery = () => {
     return selectedFileTypes.length === 0 || selectedFileTypes.length > 0;
   });
 
+  // Render different layouts based on view mode
+  const renderContent = () => {
+    switch (viewMode) {
+      case 'random':
+        return (
+          <DraggableContainer variant="masonry">
+            <GridBody>
+              {filteredArtworks.map((artwork) => (
+                <GridItem
+                  key={artwork.id}
+                  className="relative h-54 w-36 md:h-96 md:w-64"
+                >
+                  <ArtCard 
+                    artwork={artwork} 
+                    onClick={() => handleArtworkClick(artwork)}
+                  />
+                </GridItem>
+              ))}
+            </GridBody>
+          </DraggableContainer>
+        );
+
+      case 'grid':
+        return (
+          <div className="h-dvh overflow-auto relative p-8">
+            <ParticlesBackground />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 max-w-7xl mx-auto relative z-10">
+              {filteredArtworks.map((artwork) => (
+                <motion.div
+                  key={artwork.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: Math.random() * 0.2 }}
+                  className="relative aspect-[3/4]"
+                >
+                  <ArtCard 
+                    artwork={artwork} 
+                    onClick={() => handleArtworkClick(artwork)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'list':
+        return (
+          <div className="h-dvh overflow-auto relative">
+            <ParticlesBackground />
+            <div className="max-w-6xl mx-auto p-8 relative z-10">
+              {/* List Header */}
+              <div className="grid grid-cols-12 gap-4 py-3 px-4 mb-4 text-xs font-medium text-white/50 uppercase tracking-wider border-b border-white/10">
+                <div className="col-span-1">Name</div>
+                <div className="col-span-2">Dimensions</div>
+                <div className="col-span-2">Color Profile</div>
+                <div className="col-span-2">Created</div>
+                <div className="col-span-2">Creator</div>
+                <div className="col-span-3">Size</div>
+              </div>
+
+              {/* List Items */}
+              <div className="space-y-2">
+                {filteredArtworks.map((artwork, index) => (
+                  <motion.div
+                    key={artwork.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    onClick={() => handleArtworkClick(artwork)}
+                    className="grid grid-cols-12 gap-4 py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors duration-200 border border-transparent hover:border-white/10"
+                  >
+                    {/* Thumbnail & Name */}
+                    <div className="col-span-1 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded overflow-hidden bg-white/10">
+                        <img 
+                          src={artwork.imageUrl} 
+                          alt={artwork.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dimensions */}
+                    <div className="col-span-2 flex items-center text-white/70 text-sm">
+                      {artwork.dimensions}
+                    </div>
+
+                    {/* Color Profile */}
+                    <div className="col-span-2 flex items-center text-white/70 text-sm">
+                      RGB
+                    </div>
+
+                    {/* Created Date */}
+                    <div className="col-span-2 flex items-center text-white/70 text-sm">
+                      {artwork.year}
+                    </div>
+
+                    {/* Creator */}
+                    <div className="col-span-2 flex items-center text-white/70 text-sm">
+                      {artwork.artist}
+                    </div>
+
+                    {/* Size/Price */}
+                    <div className="col-span-3 flex items-center text-white/70 text-sm">
+                      {artwork.price}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
-      <DraggableContainer variant="masonry">
-        <GridBody>
-          {filteredArtworks.map((artwork) => (
-            <GridItem
-              key={artwork.id}
-              className="relative h-54 w-36 md:h-96 md:w-64"
-            >
-              <ArtCard 
-                artwork={artwork} 
-                onClick={() => handleArtworkClick(artwork)}
-              />
-            </GridItem>
-          ))}
-        </GridBody>
-      </DraggableContainer>
+      {renderContent()}
 
       {/* UI Controls - Positioned outside the draggable container */}
       <div className="fixed inset-0 pointer-events-none z-40">

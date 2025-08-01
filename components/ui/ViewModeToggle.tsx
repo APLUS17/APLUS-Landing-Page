@@ -2,13 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Grid2X2, LayoutGrid, List } from 'lucide-react';
 
 // View mode types
 export type ViewMode = 'random' | 'grid' | 'list';
 
 interface ViewModeOption {
   mode: ViewMode;
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   description: string;
 }
@@ -16,19 +17,19 @@ interface ViewModeOption {
 const VIEW_MODES: ViewModeOption[] = [
   {
     mode: 'random',
-    icon: '🟦',
+    icon: <Grid2X2 size={16} />,
     label: 'Random',
     description: 'Infinite pan view'
   },
   {
     mode: 'grid',
-    icon: '🔳',
+    icon: <LayoutGrid size={16} />,
     label: 'Grid',
     description: 'Neatly arranged grid'
   },
   {
     mode: 'list',
-    icon: '📄',
+    icon: <List size={16} />,
     label: 'List',
     description: 'Vertical list with metadata'
   }
@@ -40,8 +41,8 @@ interface ViewModeToggleProps {
   className?: string;
 }
 
-// Individual Glass Button Component - Styled like the type button
-function GlassButton({ 
+// Individual Circular Glass Button
+function CircularGlassButton({ 
   option, 
   isActive, 
   onClick 
@@ -55,36 +56,35 @@ function GlassButton({
       onClick={onClick}
       className={cn(
         "group relative overflow-hidden",
-        "px-4 py-2.5 rounded-8",
-        "bg-fill-glass-secondary backdrop-blur-2xl",
+        "h-10 w-10 rounded-full",
+        "backdrop-blur-2xl",
         "border border-white/10",
-        "text-white font-coinbase-display font-medium text-sm",
+        "flex items-center justify-center",
+        "text-white/70 hover:text-white",
         "hover:bg-white/10 hover:border-white/20",
         "transition-all duration-200",
         "focus:outline-none focus:ring-2 focus:ring-white/20",
-        isActive && "bg-white/10 border-white/20"
+        isActive 
+          ? "bg-white/10 border-white/20 text-white" 
+          : "bg-[rgba(43,43,43,0.8)]"
       )}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       title={`${option.label} - ${option.description}`}
     >
-      <div className="flex items-center gap-2">
-        {/* Icon */}
-        <span className="text-sm leading-none">
-          {option.icon}
-        </span>
-        
-        {/* Label - hidden on mobile for space */}
-        <span className={cn(
-          "hidden sm:inline transition-colors",
-          isActive ? "text-white" : "text-white/90"
-        )}>
-          {option.label}
-        </span>
-      </div>
+      {option.icon}
 
-      {/* Subtle gradient border effect - same as type button */}
-      <div className="absolute inset-0 rounded-8 bg-gradient-to-r from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      {/* Active glow effect */}
+      {isActive && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 rounded-full bg-white/5 shadow-lg shadow-white/10"
+        />
+      )}
+
+      {/* Hover effect */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
     </motion.button>
   );
 }
@@ -93,21 +93,13 @@ export function ViewModeToggle({ currentMode, onModeChange, className }: ViewMod
   
   const handleModeChange = (mode: ViewMode) => {
     onModeChange(mode);
-    
-    // Placeholder functionality - log the view mode change
     console.log(`View mode changed to: ${mode}`);
-    
-    // Here you would implement the actual view switching logic
-    // For example:
-    // - 'random': Show infinite pan gallery (current default)
-    // - 'grid': Arrange artworks in a neat grid layout
-    // - 'list': Show vertical list with detailed metadata
   };
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {VIEW_MODES.map((option) => (
-        <GlassButton
+        <CircularGlassButton
           key={option.mode}
           option={option}
           isActive={currentMode === option.mode}
@@ -115,7 +107,7 @@ export function ViewModeToggle({ currentMode, onModeChange, className }: ViewMod
         />
       ))}
       
-      {/* Optional: Current mode indicator for screen readers */}
+      {/* Screen reader support */}
       <div className="sr-only" aria-live="polite">
         Current view mode: {currentMode}
       </div>
