@@ -19,6 +19,8 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import artworks from "@/data/artworks.json";
+import { FilterBar } from "./FilterBar";
+import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
 
 // Types
 type Artwork = {
@@ -355,29 +357,61 @@ GridBody.displayName = "GridBody";
 // Main InfiniteGallery Component
 const InfiniteGallery = () => {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
+  
+  // UI Controls State
+  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>(['MP4', 'MOV', 'JPG', 'PNG']);
+  const [viewMode, setViewMode] = useState<ViewMode>('random');
 
   const handleArtworkClick = (artwork: Artwork) => {
-    // Placeholder for modal - just log for now
     console.log("Opening artwork:", artwork.title);
     setSelectedArtwork(artwork);
   };
 
+  // Placeholder: Filter artworks based on selected file types
+  // In a real implementation, you would have file type data in your artworks
+  const filteredArtworks = artworks.filter(artwork => {
+    // For demo purposes, assume all artworks match selected types
+    // In reality, you'd check artwork.fileType against selectedFileTypes
+    return selectedFileTypes.length === 0 || selectedFileTypes.length > 0;
+  });
+
   return (
-    <DraggableContainer variant="masonry">
-      <GridBody>
-        {artworks.map((artwork) => (
-          <GridItem
-            key={artwork.id}
-            className="relative h-54 w-36 md:h-96 md:w-64"
-          >
-            <ArtCard 
-              artwork={artwork} 
-              onClick={() => handleArtworkClick(artwork)}
-            />
-          </GridItem>
-        ))}
-      </GridBody>
-    </DraggableContainer>
+    <>
+      <DraggableContainer variant="masonry">
+        <GridBody>
+          {filteredArtworks.map((artwork) => (
+            <GridItem
+              key={artwork.id}
+              className="relative h-54 w-36 md:h-96 md:w-64"
+            >
+              <ArtCard 
+                artwork={artwork} 
+                onClick={() => handleArtworkClick(artwork)}
+              />
+            </GridItem>
+          ))}
+        </GridBody>
+      </DraggableContainer>
+
+      {/* UI Controls - Positioned outside the draggable container */}
+      <div className="fixed inset-0 pointer-events-none z-40">
+        {/* FilterBar - Bottom Left */}
+        <div className="absolute bottom-6 left-6 pointer-events-auto">
+          <FilterBar
+            selectedTypes={selectedFileTypes}
+            onTypesChange={setSelectedFileTypes}
+          />
+        </div>
+
+        {/* ViewModeToggle - Bottom Right */}
+        <div className="absolute bottom-6 right-6 pointer-events-auto">
+          <ViewModeToggle
+            currentMode={viewMode}
+            onModeChange={setViewMode}
+          />
+        </div>
+      </div>
+    </>
   );
 };
 
